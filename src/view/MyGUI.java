@@ -155,6 +155,12 @@ public class MyGUI  extends JFrame{
         enemyButtons[1][2]= buttonEnemy7;
         enemyButtons[1][3]= buttonEnemy8;
 
+        buttonMyTeam1.setName("hello");
+        buttonMyTeam2.setToolTipText("Hello");
+        buttonMyTeam3.setToolTipText("Hello");
+        buttonMyTeam4.setToolTipText("Hello");
+        buttonMyTeam5.setToolTipText("Hello");
+
 
     }
 
@@ -186,8 +192,6 @@ public class MyGUI  extends JFrame{
         enemyButtons[1][1]= buttonEnemy6;
         enemyButtons[1][2]= buttonEnemy7;
         enemyButtons[1][3]= buttonEnemy8;
-
-
 
     }
     public  JButton getMyTeamButtons(int i, int j){

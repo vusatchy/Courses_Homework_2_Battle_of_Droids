@@ -1,11 +1,8 @@
 package conroller;
-import model.*;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Random;
-import java.util.jar.JarEntry;
 
 import view.MyGUI;
 
@@ -19,192 +16,119 @@ public class Controller {
     private MyGUI myGUI;
     private final int ROWS = 2;
     private final int COLUMS = 4;
-    private simpleDroid[][] myDroids = new model.simpleDroid[ROWS][COLUMS];
-    private simpleDroid[][] enemyDroids = new model.simpleDroid[ROWS][COLUMS];
-    private int currentRow;
-    private int currentColumn;
+    
+
+    private Cell[][] allyCell=new Cell[ROWS][COLUMS];
+    private Cell[][] enemyCell=new Cell[ROWS][COLUMS];
 
 
     private int currentEnemyRow;
     private int currentEnemyColumn;
 
-    private int currentMyDroidRow;
-    private int currentMyDroidColumn;
+    private int currentAllyRow;
+    private int currentAllyColumn;
 
-    private int currentTargetRow;
-    private int currentTargetColumn;
+    private int currentHealerRow;
+    private int currentHealerColumn;
 
     boolean itsHeal;
 
-    private int damageSender = 0;
-    private int healSender = 0;
 
 
     public Controller() {
         myGUI = new MyGUI();
-        setEnemyField(myGUI.getEnemyButtons());
+        initialization();
+        setEnemyField();
+        myGUI.getButtonStep().addActionListener(this::actionPerformedMakeStep);
+        myGUI.getButtonReset().addActionListener(this::actionPerformedReset);
 
-
-        myGUI.getButtonMyTeam1().addActionListener(this::actionPerformedMyTeam1);
-        myGUI.getButtonMyTeam2().addActionListener(this::actionPerformedMyTeam2);
-        myGUI.getButtonMyTeam3().addActionListener(this::actionPerformedMyTeam3);
-        myGUI.getButtonMyTeam4().addActionListener(this::actionPerformedMyTeam4);
-        myGUI.getButtonMyTeam5().addActionListener(this::actionPerformedMyTeam5);
-        myGUI.getButtonMyTeam6().addActionListener(this::actionPerformedMyTeam6);
-        myGUI.getButtonMyTeam7().addActionListener(this::actionPerformedMyTeam7);
-        myGUI.getButtonMyTeam8().addActionListener(this::actionPerformedMyTeam8);
-
-        myGUI.getButtonEnemy1().addActionListener(this::actionPerformedEnemy1);
-        myGUI.getButtonEnemy2().addActionListener(this::actionPerformedEnemy2);
-        myGUI.getButtonEnemy3().addActionListener(this::actionPerformedEnemy3);
-        myGUI.getButtonEnemy4().addActionListener(this::actionPerformedEnemy4);
-        myGUI.getButtonEnemy5().addActionListener(this::actionPerformedEnemy5);
-        myGUI.getButtonEnemy6().addActionListener(this::actionPerformedEnemy6);
-        myGUI.getButtonEnemy7().addActionListener(this::actionPerformedEnemy7);
-        myGUI.getButtonEnemy8().addActionListener(this::actionPerformedEnemy8);
-
-
-        myGUI.getButtonStep().addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!itsHeal) {
-                    if (enemyDroids[currentEnemyRow][currentEnemyColumn] != null ) {
-                        enemyDroids[currentEnemyRow][currentEnemyColumn].getHit(((battleDroid) myDroids[currentMyDroidRow][currentMyDroidColumn]).getDamage());
-                        myGUI.getButtonsEnemy(currentEnemyRow, currentEnemyColumn).setText(enemyDroids[currentEnemyRow][currentEnemyColumn].toString());
-                        if (!enemyDroids[currentEnemyRow][currentEnemyColumn].isAlive()) {
-                            myGUI.getButtonsEnemy(currentEnemyRow, currentEnemyColumn).setText("");
-                            enemyDroids[currentEnemyRow][currentEnemyColumn]=null;
-                        }
-                        if (!myDroids[currentMyDroidRow][currentMyDroidColumn].isAlive()) {
-                            myGUI.getMyTeamButtons(currentMyDroidRow, currentMyDroidColumn).setText("");
-                            myDroids[currentMyDroidRow][currentMyDroidColumn]=null;
-                        }
-                    }
-                } else {
-                    if (myDroids[currentMyDroidRow][currentMyDroidColumn] != null ) {
-                        myDroids[currentMyDroidRow][currentMyDroidColumn].getHeal(((droidHealer)  myDroids[currentTargetRow][currentTargetColumn]).getHealPower());
-                        myGUI.getMyTeamButtons(currentMyDroidRow, currentMyDroidColumn).setText(myDroids[currentMyDroidRow][currentMyDroidColumn].toString());
-                    }
-                }
-                myGUI.getMyTeamButtons(currentMyDroidRow, currentMyDroidColumn).setBackground(Color.white);
-                myGUI.getButtonsEnemy(currentEnemyRow, currentEnemyColumn).setBackground(Color.white);
-                myGUI.getMyTeamButtons(currentTargetRow, currentTargetColumn).setBackground(Color.white);
-                currentEnemyRow = 0;
-                currentEnemyColumn = 0;
-
-                currentMyDroidRow = 0;
-                currentMyDroidColumn = 0;
-
-                currentTargetRow = 0;
-                currentTargetColumn = 0;
-
-                itsHeal=false;
-                findWinner();
-                botMakeStep();
-                findWinner();
-                System.out.println();
-
-            }
-        });
-
-        myGUI.getButtonReset().addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setEnemyField(myGUI.getEnemyButtons());
-                resetMyTeam();
-            }
-        });
     }
 
 
-    private void setEnemyField(JButton[][] buttons) {
-        Random random = new Random();
+    private void initialization(){
+        for(int i=0;i<ROWS;i++){
+            for(int j=0;j<COLUMS;j++){
+
+                allyCell[i][j]=new Cell( myGUI.getMyTeamButtons(i,j),null);
+                allyCell[i][j].setAction(this::actionPerformedMyTeam);
+                allyCell[i][j].setButtonHiddenStr(new Integer(i).toString()+new Integer(j).toString());
+
+                enemyCell[i][j]=new Cell( myGUI.getButtonsEnemy(i,j),null);
+                enemyCell[i][j].setAction(this::actionPerformedEnemy);
+                enemyCell[i][j].setButtonHiddenStr(new Integer(i).toString()+new Integer(j).toString());
+
+            }
+        }
+    }
+
+    private void setEnemyField() {
         for (int i = 0; i < ROWS; i++) {
             for (int j = 0; j < COLUMS; j++) {
-                int someValue = random.nextInt(4);
-                switch (someValue) {
-                    case 0:
-                        enemyDroids[i][j] = new battleDroid();
-                        buttons[i][j].setText(enemyDroids[i][j].toString());
-                        break;
-                    case 1:
-                        enemyDroids[i][j] = new droidHealer();
-                        buttons[i][j].setText(enemyDroids[i][j].toString());
-                        break;
-                    case 2:
-                        enemyDroids[i][j] = new droidSniper();
-                        buttons[i][j].setText(enemyDroids[i][j].toString());
-                        break;
-                    case 3:
-                        enemyDroids[i][j] = new droidKamikadze();
-                        buttons[i][j].setText(enemyDroids[i][j].toString());
-                        break;
-
+                    enemyCell[i][j].setRandomDroid();
                 }
 
             }
         }
-    }
 
 
-    public void botMakeStep() {
-         mainLoop:for(int i=0;i<ROWS;i++){
-            for(int j=0;j<COLUMS;j++){
-                if(enemyDroids[i][j]!=null)
-                {
-                    if (enemyDroids[i][j] instanceof battleDroid){
-                        damageSender =((battleDroid) enemyDroids[i][j]).getDamage();
-                        for (int z=0;z<ROWS;z++){
-                            for(int t=0;t<COLUMS;t++){
-                                if(myDroids[z][t]!=null){
-                                    myDroids[z][t].getHit(damageSender);
-                                    System.out.println(damageSender);
-
-                                    if(!enemyDroids[i][j].isAlive()){
-                                        myGUI.getButtonsEnemy(i,j).setText("");
-                                        enemyDroids[i][j]=null;
-
-                                    }
-
-                                    if(!myDroids[z][t].isAlive()){
-                                        myGUI.getMyTeamButtons(z,t).setText("");
-                                        myDroids[z][t]=null;
-
-                                    }
-                                    else  myGUI.getMyTeamButtons(z,t).setText(myDroids[z][t].toString());
-                                    break mainLoop;
-                                }
-                            }
-                        }
-
-                    }
-                    if (enemyDroids[i][j] instanceof droidHealer){
-                        healSender=((droidHealer)enemyDroids[i][j]).getHealPower();
-                        for (int z=0;z<ROWS;z++){
-                            for(int t=0;t<COLUMS;t++){
-                                if(enemyDroids[z][t]!=null){
-                                    enemyDroids[z][t].getHeal(healSender);
-                                    myGUI.getButtonsEnemy(z,t).setText(enemyDroids[z][t].toString());
-                                    break mainLoop;
-                                }
-                            }
-                        }
-
-                    }
-                }
-            }
+    private void botMakeStep(){
+        Cell enemyCell = getRandomEnemy();
+        if(enemyCell.isInstanceOfBattleDroid()){
+            int dmg=enemyCell.getDamage();
+            getRandomAlly().getHit(dmg);
+            System.out.println(enemyCell.getDroid().toString()+" make "+dmg+" dmg");
+        }
+        if(enemyCell.isInstanceOfHealerDriod()){
+            int heal=enemyCell.getHealPower();
+            getRandomEnemy().getHeal(heal);
+            System.out.println(enemyCell.getDroid().toString()+" make "+heal+" heal");
         }
 
     }
 
-     public void findWinner() {
+    private Cell getRandomEnemy(int row, int column){
+        Random random = new Random();
+        if(!enemyCell[row][column].isNull()){
+            return enemyCell[row][column];
+        }
+        else return getRandomEnemy(random.nextInt(ROWS),random.nextInt(COLUMS));
+
+    }
+
+    private Cell getRandomEnemy(){
+        Random random = new Random();
+        if(!enemyCell[random.nextInt(ROWS)][random.nextInt(COLUMS)].isNull()){
+            return enemyCell[random.nextInt(ROWS)][random.nextInt(COLUMS)];
+        }
+        else return getRandomEnemy(random.nextInt(ROWS),random.nextInt(COLUMS));
+    }
+
+
+    private Cell getRandomAlly(int row, int column){
+        Random random = new Random();
+        if(!allyCell[row][column].isNull()){
+            return allyCell[row][column];
+        }
+        else return getRandomAlly(random.nextInt(ROWS),random.nextInt(COLUMS));
+
+    }
+
+    private Cell getRandomAlly(){
+        Random random = new Random();
+        if(!allyCell[random.nextInt(ROWS)][random.nextInt(COLUMS)].isNull()){
+            return allyCell[random.nextInt(ROWS)][random.nextInt(COLUMS)];
+        }
+        else return getRandomAlly(random.nextInt(ROWS),random.nextInt(COLUMS));
+    }
+
+     private void findWinner() {
 
          int enemyCounter = 0;
          int myCounter = 0;
          for (int i = 0; i < ROWS; i++) {
              for (int j = 0; j < COLUMS; j++) {
-                 if (enemyDroids[i][j] != null) enemyCounter++;
-                 if (myDroids[i][j] != null) myCounter++;
+                 if (!enemyCell[i][j].isNull()) enemyCounter++;
+                 if (!allyCell[i][j].isNull()) myCounter++;
              }
          }
          if (enemyCounter == 0) {
@@ -213,6 +137,9 @@ public class Controller {
                      "You win!",
                      "Results",
                      JOptionPane.PLAIN_MESSAGE);
+             initialization();
+             setEnemyField();
+
          }
 
          if (myCounter == 0) {
@@ -220,357 +147,121 @@ public class Controller {
                      "Enemy win!",
                      "Results",
                      JOptionPane.PLAIN_MESSAGE);
+             initialization();
+             setEnemyField();
          }
+
      }
 
 
 
+    public void update(){
+        for(int i=0;i<ROWS;i++){
+            for(int j=0;j<COLUMS;j++){
+                allyCell[i][j].update();
+                enemyCell[i][j].update();
+            }
+        }
 
-    //First chaos
+    }
+
 
      private void resetMyTeam(){
 
          for (int i = 0; i < ROWS; i++) {
              for (int j = 0; j < COLUMS; j++) {
-                myDroids[i][j]=null;
+                allyCell[i][j]=null;
                 myGUI.getMyTeamButtons(i,j).setText("");
              }
          }
      }
 
-    public void actionPerformedEnemy1(ActionEvent e) {
-        currentColumn = 0;
-        currentRow = 0;
+
+    //<-----------ACTIONS---------------->
+
+    private void actionPerformedEnemy(ActionEvent e) {
+
+        JButton button = (JButton)e.getSource();
+        int currentRow=Character.getNumericValue(button.getName().charAt(0));
+        int currentColumn=Character.getNumericValue(button.getName().charAt(1));
         currentEnemyRow = currentRow;
         currentEnemyColumn = currentColumn;
-        myGUI.getButtonsEnemy(currentRow, currentColumn).setBackground(Color.red);
+        button.setBackground(Color.red);
     }
 
-    public void actionPerformedEnemy2(ActionEvent e) {
-        currentColumn = 1;
-        currentRow = 0;
-        currentEnemyRow = currentRow;
-        currentEnemyColumn = currentColumn;
-        myGUI.getButtonsEnemy(currentRow, currentColumn).setBackground(Color.red);
-    }
 
-    public void actionPerformedEnemy3(ActionEvent e) {
-        currentColumn = 2;
-        currentRow = 0;
-        currentEnemyRow = currentRow;
-        currentEnemyColumn = currentColumn;
-        myGUI.getButtonsEnemy(currentRow, currentColumn).setBackground(Color.red);
-    }
 
-    public void actionPerformedEnemy4(ActionEvent e) {
-        currentColumn = 3;
-        currentRow = 0;
-        currentEnemyRow = currentRow;
-        currentEnemyColumn = currentColumn;
-        myGUI.getButtonsEnemy(currentRow, currentColumn).setBackground(Color.red);
-    }
 
-    public void actionPerformedEnemy5(ActionEvent e) {
-        currentColumn = 0;
-        currentRow = 1;
-        currentEnemyRow = currentRow;
-        currentEnemyColumn = currentColumn;
-        myGUI.getButtonsEnemy(currentRow, currentColumn).setBackground(Color.red);
-    }
+    private void actionPerformedMyTeam(ActionEvent e) {
 
-    public void actionPerformedEnemy6(ActionEvent e) {
-        currentColumn = 1;
-        currentRow = 1;
-        currentEnemyRow = currentRow;
-        currentEnemyColumn = currentColumn;
-        myGUI.getButtonsEnemy(currentRow, currentColumn).setBackground(Color.red);
-    }
+        JButton button = (JButton)e.getSource();
+        if(button.getText().equals("")) {
+            if (myGUI.getBattleDroidRadioButton().isSelected() == true) {
+                button.setText("Creating BD");
+            } else if (myGUI.getDroidSniperRadioButton().isSelected() == true ) {
+                button.setText("Creating DS");
+            } else if (myGUI.getDroidKamikadzeRadioButton().isSelected() == true ) {
+                button.setText("Creating DK");
+            } else if (myGUI.getDroidHealerRadioButton().isSelected() == true ) {
+                button.setText("Creating DH");
+            }
+        }
+        else {
+            int currentRow=Character.getNumericValue(button.getName().charAt(0));
+            int currentColumn=Character.getNumericValue(button.getName().charAt(1));
 
-    public void actionPerformedEnemy7(ActionEvent e) {
-        currentColumn = 2;
-        currentRow = 1;
-        currentEnemyRow = currentRow;
-        currentEnemyColumn = currentColumn;
-        myGUI.getButtonsEnemy(currentRow, currentColumn).setBackground(Color.red);
-    }
+            if (allyCell[currentRow][currentColumn] != null && allyCell[currentRow][currentColumn].isInstanceOfBattleDroid()) {
+                currentAllyRow = currentRow;
+                currentAllyColumn = currentColumn;
+                button.setBackground(Color.BLUE);
 
-    public void actionPerformedEnemy8(ActionEvent e) {
-        currentColumn = 3;
-        currentRow = 1;
-        currentEnemyRow = currentRow;
-        currentEnemyColumn = currentColumn;
-        myGUI.getButtonsEnemy(currentRow, currentColumn).setBackground(Color.red);
-    }
-
-    // Secon chaos statrs here
-
-    public void actionPerformedMyTeam1(ActionEvent e) {
-        currentRow = 0;
-        currentColumn = 0;
-        if (myGUI.getBattleDroidRadioButton().isSelected() == true && myGUI.getButtonMyTeam1().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new battleDroid();
-            myGUI.getButtonMyTeam1().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidSniperRadioButton().isSelected() == true && myGUI.getButtonMyTeam1().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidSniper();
-            myGUI.getButtonMyTeam1().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidKamikadzeRadioButton().isSelected() == true && myGUI.getButtonMyTeam1().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidKamikadze();
-            myGUI.getButtonMyTeam1().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidHealerRadioButton().isSelected() == true && myGUI.getButtonMyTeam1().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidHealer();
-            myGUI.getButtonMyTeam1().setText(myDroids[currentRow][currentColumn].toString());
-        } else {
-
-            if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof battleDroid) {
-                currentMyDroidRow = currentRow;
-                currentMyDroidColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
-
-            } else if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof droidHealer) {
+            } else if (allyCell[currentRow][currentColumn] != null && allyCell[currentRow][currentColumn].isInstanceOfHealerDriod()) {
                 itsHeal=true;
-                currentTargetRow = currentRow;
-                currentTargetColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
+                currentHealerRow = currentRow;
+                currentHealerColumn = currentColumn;
+                button.setBackground(Color.BLUE);
             }
 
         }
     }
 
-    public void actionPerformedMyTeam2(ActionEvent e) {
-        currentRow = 0;
-        currentColumn = 1;
-        if (myGUI.getBattleDroidRadioButton().isSelected() == true && myGUI.getButtonMyTeam2().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new battleDroid();
-            myGUI.getButtonMyTeam2().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidSniperRadioButton().isSelected() == true && myGUI.getButtonMyTeam2().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidSniper();
-            myGUI.getButtonMyTeam2().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidKamikadzeRadioButton().isSelected() == true && myGUI.getButtonMyTeam2().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidKamikadze();
-            myGUI.getButtonMyTeam2().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidHealerRadioButton().isSelected() == true && myGUI.getButtonMyTeam2().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidHealer();
-            myGUI.getButtonMyTeam2().setText(myDroids[currentRow][currentColumn].toString());
+    private void actionPerformedMakeStep(ActionEvent e){
+        if (!itsHeal) {
+            if (!enemyCell[currentEnemyRow][currentEnemyColumn].isNull()&&!allyCell[currentAllyRow][currentAllyColumn].isNull() ) {
+                enemyCell[currentEnemyRow][currentEnemyColumn].getHit(allyCell[currentAllyRow][currentAllyColumn].getDamage());
+            }
         } else {
-
-            if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof battleDroid) {
-                currentMyDroidRow = currentRow;
-                currentMyDroidColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
-
-            } else if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof droidHealer) {
-                itsHeal=true;
-                currentTargetRow = currentRow;
-                currentTargetColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
-            }
-
-        }
-    }
-
-    public void actionPerformedMyTeam3(ActionEvent e) {
-        currentRow = 0;
-        currentColumn = 2;
-        if (myGUI.getBattleDroidRadioButton().isSelected() == true && myGUI.getButtonMyTeam3().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new battleDroid();
-            myGUI.getButtonMyTeam3().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidSniperRadioButton().isSelected() == true && myGUI.getButtonMyTeam3().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidSniper();
-            myGUI.getButtonMyTeam3().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidKamikadzeRadioButton().isSelected() == true && myGUI.getButtonMyTeam3().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidKamikadze();
-            myGUI.getButtonMyTeam3().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidHealerRadioButton().isSelected() == true && myGUI.getButtonMyTeam3().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidHealer();
-            myGUI.getButtonMyTeam3().setText(myDroids[currentRow][currentColumn].toString());
-        } else {
-
-            if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof battleDroid) {
-                currentMyDroidRow = currentRow;
-                currentMyDroidColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
-
-            } else if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof droidHealer) {
-                currentTargetRow = currentRow;
-                currentTargetColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
-            }
-
-        }
-    }
-
-    public void actionPerformedMyTeam4(ActionEvent e) {
-        currentRow = 0;
-        currentColumn = 3;
-        if (myGUI.getBattleDroidRadioButton().isSelected() == true && myGUI.getButtonMyTeam4().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new battleDroid();
-            myGUI.getButtonMyTeam4().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidSniperRadioButton().isSelected() == true && myGUI.getButtonMyTeam4().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidSniper();
-            myGUI.getButtonMyTeam4().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidKamikadzeRadioButton().isSelected() == true && myGUI.getButtonMyTeam4().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidKamikadze();
-            myGUI.getButtonMyTeam4().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidHealerRadioButton().isSelected() == true && myGUI.getButtonMyTeam4().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidHealer();
-            myGUI.getButtonMyTeam4().setText(myDroids[currentRow][currentColumn].toString());
-        } else {
-
-            if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof battleDroid) {
-
-                currentMyDroidRow = currentRow;
-                currentMyDroidColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
-
-            } else if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof droidHealer) {
-
-                itsHeal=true;
-                currentTargetRow = currentRow;
-                currentTargetColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
-            }
-
-        }
-    }
-
-    public void actionPerformedMyTeam5(ActionEvent e) {
-        currentRow = 1;
-        currentColumn = 0;
-        if (myGUI.getBattleDroidRadioButton().isSelected() == true && myGUI.getButtonMyTeam5().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new battleDroid();
-            myGUI.getButtonMyTeam5().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidSniperRadioButton().isSelected() == true && myGUI.getButtonMyTeam5().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidSniper();
-            myGUI.getButtonMyTeam5().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidKamikadzeRadioButton().isSelected() == true && myGUI.getButtonMyTeam5().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidKamikadze();
-            myGUI.getButtonMyTeam5().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidHealerRadioButton().isSelected() == true && myGUI.getButtonMyTeam5().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidHealer();
-            myGUI.getButtonMyTeam5().setText(myDroids[currentRow][currentColumn].toString());
-        } else {
-
-            if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof battleDroid) {
-
-                currentMyDroidRow = currentRow;
-                currentMyDroidColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
-
-            } else if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof droidHealer) {
-
-                itsHeal=true;
-                currentTargetRow = currentRow;
-                currentTargetColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
+            if (!allyCell[currentAllyRow][currentAllyColumn] .isNull()&&!allyCell[currentHealerRow][currentHealerColumn].isNull()) {
+                allyCell[currentAllyRow][currentAllyColumn].getHeal(allyCell[currentHealerRow][currentHealerColumn].getHealPower());
             }
         }
+
+        enemyCell[currentEnemyRow][currentEnemyColumn].setButtonColour(Color.white);
+        allyCell[currentAllyRow][currentAllyColumn].setButtonColour(Color.white);
+        allyCell[currentHealerRow][currentHealerColumn].setButtonColour(Color.white);
+
+        currentEnemyRow = 0;
+        currentEnemyColumn = 0;
+
+        currentAllyRow = 0;
+        currentAllyColumn = 0;
+
+        currentHealerRow = 0;
+        currentHealerColumn = 0;
+
+
+        itsHeal=false;
+        findWinner();
+        botMakeStep();
+        findWinner();
     }
 
-    public void actionPerformedMyTeam6(ActionEvent e) {
-        currentRow = 1;
-        currentColumn = 1;
-        if (myGUI.getBattleDroidRadioButton().isSelected() == true && myGUI.getButtonMyTeam6().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new battleDroid();
-            myGUI.getButtonMyTeam6().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidSniperRadioButton().isSelected() == true && myGUI.getButtonMyTeam6().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidSniper();
-            myGUI.getButtonMyTeam6().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidKamikadzeRadioButton().isSelected() == true && myGUI.getButtonMyTeam6().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidKamikadze();
-            myGUI.getButtonMyTeam6().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidHealerRadioButton().isSelected() == true && myGUI.getButtonMyTeam6().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidHealer();
-            myGUI.getButtonMyTeam6().setText(myDroids[currentRow][currentColumn].toString());
-        } else {
-            if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof battleDroid) {
+    private void actionPerformedReset(ActionEvent e){
+        initialization();
+        setEnemyField();
 
-                currentMyDroidRow = currentRow;
-                currentMyDroidColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
-
-            } else if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof droidHealer) {
-
-                currentTargetRow = currentRow;
-                currentTargetColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
-            }
-
-        }
     }
 
-    public void actionPerformedMyTeam7(ActionEvent e) {
-        currentRow = 1;
-        currentColumn = 2;
-        if (myGUI.getBattleDroidRadioButton().isSelected() == true && myGUI.getButtonMyTeam7().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new battleDroid();
-            myGUI.getButtonMyTeam7().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidSniperRadioButton().isSelected() == true && myGUI.getButtonMyTeam7().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidSniper();
-            myGUI.getButtonMyTeam7().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidKamikadzeRadioButton().isSelected() == true && myGUI.getButtonMyTeam7().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidKamikadze();
-            myGUI.getButtonMyTeam7().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidHealerRadioButton().isSelected() == true && myGUI.getButtonMyTeam7().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidHealer();
-            myGUI.getButtonMyTeam7().setText(myDroids[currentRow][currentColumn].toString());
-        } else {
 
-            if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof battleDroid) {
-                currentMyDroidRow = currentRow;
-                currentMyDroidColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
 
-            } else if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof droidHealer) {
-                itsHeal=true;
-                currentTargetRow = currentRow;
-                currentTargetColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
-            }
-        }
-    }
-
-    public void actionPerformedMyTeam8(ActionEvent e) {
-        currentRow = 1;
-        currentColumn = 3;
-
-        if (myGUI.getBattleDroidRadioButton().isSelected() == true && myGUI.getButtonMyTeam8().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new battleDroid();
-            myGUI.getButtonMyTeam8().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidSniperRadioButton().isSelected() == true && myGUI.getButtonMyTeam8().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidSniper();
-            myGUI.getButtonMyTeam8().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidKamikadzeRadioButton().isSelected() == true && myGUI.getButtonMyTeam8().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidKamikadze();
-            myGUI.getButtonMyTeam8().setText(myDroids[currentRow][currentColumn].toString());
-        } else if (myGUI.getDroidHealerRadioButton().isSelected() == true && myGUI.getButtonMyTeam8().getText().equals("")) {
-            myDroids[currentRow][currentColumn] = new droidHealer();
-            myGUI.getButtonMyTeam8().setText(myDroids[currentRow][currentColumn].toString());
-        } else {
-
-            if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof battleDroid) {
-                currentMyDroidRow = currentRow;
-                currentMyDroidColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
-
-            } else if (myDroids[currentRow][currentColumn] != null && myDroids[currentRow][currentColumn] instanceof droidHealer) {
-                itsHeal=true;
-                currentTargetRow = currentRow;
-                currentTargetColumn = currentColumn;
-                myGUI.getMyTeamButtons(currentRow, currentColumn).setBackground(Color.BLUE);
-            }
-
-        }
-    }
 }
-
-
-
-
-
-
-
-
-
-
-
-

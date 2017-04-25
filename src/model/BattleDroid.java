@@ -1,11 +1,9 @@
 package model;
 
-import java.util.Random;
-
 /**
  * Created by white on 22.04.2017.
  */
-public class battleDroid extends simpleDroid {
+public class BattleDroid extends SimpleDroid {
 
 
         //protected int maxHealth;
@@ -16,16 +14,16 @@ public class battleDroid extends simpleDroid {
 
 
 
-        public battleDroid(int maxHealth, int maxDamage, int minDamage, double accuracy) {
+        public BattleDroid(int maxHealth, int maxDamage, int minDamage, double accuracy) {
             super(maxHealth);
             this.maxDamage = maxDamage;
             this.minDamage = minDamage;
             this.accuracy = accuracy;
-            this.maxHealth=maxHealth;
-            this.currentHealth=this.maxHealth;
+          //  this.maxHealth=maxHealth;
+            //this.currentHealth=this.maxHealth;
         }
 
-         public battleDroid(){
+         public BattleDroid(){
              //this.maxHealth=200;
            //  this.currentHealth=this.maxHealth;
              super(200);

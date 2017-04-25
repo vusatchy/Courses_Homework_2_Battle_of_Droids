@@ -1,8 +1,4 @@
 import conroller.Controller;
-import model.battleDroid;
-
-
-import javax.swing.*;
 
 
 /**
@@ -13,6 +9,9 @@ public class Appliction  {
         //JFrame frame=new JFrame("Appliction");
        // frame.setContentPane( new MyGUI());
         Controller controller = new Controller();
+        while (true) {
+            controller.update();
+        }
 
 
 
